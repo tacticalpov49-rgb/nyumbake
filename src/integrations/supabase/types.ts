@@ -10,188 +10,191 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
-      matches: {
+      bots: {
         Row: {
+          category: string
           created_at: string
+          description: string
+          download_path: string | null
+          features: string[]
           id: string
-          status: string
-          user1_id: string
-          user2_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          status?: string
-          user1_id: string
-          user2_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          status?: string
-          user1_id?: string
-          user2_id?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          created_at: string
-          id: string
-          read: boolean
-          receiver_id: string
-          sender_id: string
-          text: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id: string
-          sender_id: string
-          text: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id?: string
-          sender_id?: string
-          text?: string
-        }
-        Relationships: []
-      }
-      post_comments: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          text: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          text: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          text?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      post_likes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      posts: {
-        Row: {
-          created_at: string
-          id: string
-          image_url: string | null
-          text: string
+          image_emoji: string
+          instructions: string
+          is_active: boolean
+          name: string
+          price: number
+          short_description: string
           updated_at: string
-          user_id: string
         }
         Insert: {
+          category?: string
           created_at?: string
+          description?: string
+          download_path?: string | null
+          features?: string[]
           id?: string
-          image_url?: string | null
-          text: string
+          image_emoji?: string
+          instructions?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          short_description?: string
           updated_at?: string
-          user_id: string
         }
         Update: {
+          category?: string
           created_at?: string
+          description?: string
+          download_path?: string | null
+          features?: string[]
           id?: string
-          image_url?: string | null
-          text?: string
+          image_emoji?: string
+          instructions?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          short_description?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
-          bio: string | null
           created_at: string
           display_name: string | null
-          icebreaker: string | null
           id: string
-          interests: string[] | null
-          location: string | null
           updated_at: string
           user_id: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
-          bio?: string | null
           created_at?: string
           display_name?: string | null
-          icebreaker?: string | null
           id?: string
-          interests?: string[] | null
-          location?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
-          bio?: string | null
           created_at?: string
           display_name?: string | null
-          icebreaker?: string | null
           id?: string
-          interests?: string[] | null
-          location?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      ratings: {
+        Row: {
+          bot_id: string
+          created_at: string
+          id: string
+          rating: number
+          review: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          review?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          review?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          bot_id: string | null
+          created_at: string
+          customer_email: string
+          download_expires: string | null
+          download_token: string | null
+          id: string
+          payment_status: string
+          paypal_order_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          bot_id?: string | null
+          created_at?: string
+          customer_email?: string
+          download_expires?: string | null
+          download_token?: string | null
+          id?: string
+          payment_status?: string
+          paypal_order_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          bot_id?: string | null
+          created_at?: string
+          customer_email?: string
+          download_expires?: string | null
+          download_token?: string | null
+          id?: string
+          payment_status?: string
+          paypal_order_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -200,10 +203,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bootstrap_admin: { Args: { _user_id: string }; Returns: boolean }
+      check_admins_exist: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -330,6 +341,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
