@@ -1,22 +1,23 @@
-import { useState, useEffect } from "react";
-import SwipeCard from "@/components/SwipeCard";
+import { useState, useEffect, useMemo } from "react";
 import PostCard from "@/components/PostCard";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, MapPin, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-const MOCK_PROFILES = [
+const FRIEND_SEEKERS = [
   {
     id: 1,
     name: "Amara",
     age: 26,
     distance: "3 km away",
     photo: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face",
-    icebreaker: "A stranger's dog sat next to me on a bench today and it made my whole week.",
-    sharedInterests: ["Hiking", "Coffee", "Photography"],
+    bio: "Love hiking trails and finding hidden coffee spots. Always down for a spontaneous adventure 🌿",
+    interests: ["Hiking", "Coffee", "Photography"],
   },
   {
     id: 2,
@@ -24,8 +25,8 @@ const MOCK_PROFILES = [
     age: 29,
     distance: "7 km away",
     photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop&crop=face",
-    icebreaker: "Found a tiny bookshop yesterday that smelled like cedar. Bought 3 books I didn't need.",
-    sharedInterests: ["Books", "Jazz", "Walks"],
+    bio: "Bookworm who loves jazz bars and long walks. Looking for a friend to explore the city with 📖",
+    interests: ["Books", "Jazz", "Walks"],
   },
   {
     id: 3,
@@ -33,8 +34,8 @@ const MOCK_PROFILES = [
     age: 24,
     distance: "12 km away",
     photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop&crop=face",
-    icebreaker: "My morning ritual is making pour-over coffee while listening to lo-fi. Simple joy.",
-    sharedInterests: ["Music", "Yoga", "Cooking"],
+    bio: "Yoga teacher and lo-fi enthusiast. Let's grab matcha and talk about life ☕",
+    interests: ["Music", "Yoga", "Cooking"],
   },
   {
     id: 4,
@@ -42,8 +43,17 @@ const MOCK_PROFILES = [
     age: 27,
     distance: "5 km away",
     photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop&crop=face",
-    icebreaker: "I learned to make the perfect omelette today. Small wins matter.",
-    sharedInterests: ["Cooking", "Fitness", "Travel"],
+    bio: "Fitness nerd who also loves cooking experiments. Seeking a gym buddy or cooking partner 🍳",
+    interests: ["Cooking", "Fitness", "Travel"],
+  },
+  {
+    id: 5,
+    name: "Nia",
+    age: 25,
+    distance: "2 km away",
+    photo: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop&crop=face",
+    bio: "Artist and plant mom. Let's visit galleries or just chill in the park 🎨",
+    interests: ["Art", "Plants", "Music"],
   },
 ];
 
@@ -55,6 +65,7 @@ const MOCK_POSTS = [
     image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop",
     text: "Explored a hidden waterfall today. Nature always heals. 🌿",
     time: "2h ago",
+    baseLikes: 24,
   },
   {
     id: "mock-2",
@@ -63,6 +74,7 @@ const MOCK_POSTS = [
     image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&fit=crop",
     text: "Current read: 'The Art of Stillness'. Highly recommend for overthinkers like me 📖",
     time: "4h ago",
+    baseLikes: 18,
   },
   {
     id: "mock-3",
@@ -71,6 +83,7 @@ const MOCK_POSTS = [
     image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
     text: "Pour-over mornings are a ritual, not a routine. Who else is a coffee nerd? ☕",
     time: "5h ago",
+    baseLikes: 31,
   },
   {
     id: "mock-4",
@@ -79,6 +92,7 @@ const MOCK_POSTS = [
     image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&h=300&fit=crop",
     text: "Morning run through the park. The city is beautiful at 6am when nobody's around.",
     time: "6h ago",
+    baseLikes: 15,
   },
   {
     id: "mock-5",
@@ -87,14 +101,16 @@ const MOCK_POSTS = [
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop",
     text: "Made jollof rice for the first time. Verdict: my grandma would be proud 🍚",
     time: "8h ago",
+    baseLikes: 42,
   },
   {
     id: "mock-6",
-    user: "Lena",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
+    user: "Nia",
+    avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
     text: "Sunset yoga on the rooftop. This is what peace looks like 🧘‍♀️",
     time: "10h ago",
+    baseLikes: 27,
   },
 ];
 
@@ -106,11 +122,10 @@ interface Comment {
 }
 
 const Discover = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [likesLeft, setLikesLeft] = useState(5);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<typeof FRIEND_SEEKERS[0] | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -120,28 +135,6 @@ const Discover = () => {
       if (data) setProfile(data);
     });
   }, [user]);
-
-  const currentProfile = MOCK_PROFILES[currentIndex];
-
-  const handleNext = () => {
-    if (currentIndex < MOCK_PROFILES.length - 1) {
-      setCurrentIndex((i) => i + 1);
-    } else {
-      setCurrentIndex(-1);
-    }
-  };
-
-  const handleLike = () => {
-    if (likesLeft <= 0) {
-      toast("No likes left today", { description: "Upgrade to Premium for unlimited likes ✨" });
-      return;
-    }
-    setLikesLeft((l) => l - 1);
-    toast("💚 Liked!", { description: `You liked ${currentProfile.name}` });
-    handleNext();
-  };
-
-  const handlePass = () => handleNext();
 
   const togglePostLike = (postId: string) => {
     if (!user) {
@@ -180,9 +173,7 @@ const Discover = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">Discover</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {currentIndex >= 0 ? `${MOCK_PROFILES.length - currentIndex} people nearby` : "Check out the community"}
-            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">See what's happening around you</p>
           </div>
           <div className="flex items-center gap-2">
             {user ? (
@@ -214,59 +205,34 @@ const Discover = () => {
                 Sign In
               </button>
             )}
-            <div className="flex items-center gap-1.5 rounded-full bg-sage px-3 py-1.5">
-              <span className="text-xs font-semibold text-sage-foreground">{likesLeft} likes left</span>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Horizontal profiles */}
+      {/* People looking for friends — horizontal scroll */}
       <div className="px-4 pb-5">
-        <p className="text-xs font-semibold text-muted-foreground mb-3 px-1">People nearby</p>
+        <p className="text-xs font-semibold text-muted-foreground mb-3 px-1">People looking for friends</p>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {MOCK_PROFILES.map((profile, i) => (
+          {FRIEND_SEEKERS.map((person) => (
             <button
-              key={profile.id}
-              onClick={() => { if (i !== currentIndex) setCurrentIndex(i); }}
-              className={`shrink-0 flex flex-col items-center gap-1.5 ${i === currentIndex ? "opacity-100" : "opacity-70"}`}
+              key={person.id}
+              onClick={() => setSelectedPerson(person)}
+              className="shrink-0 flex flex-col items-center gap-1.5"
             >
-              <div className={`h-16 w-16 overflow-hidden rounded-full ring-2 ${i === currentIndex ? "ring-primary" : "ring-border"}`}>
-                <img src={profile.photo} alt={profile.name} className="h-full w-full object-cover" />
+              <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary/50 hover:ring-primary transition-all">
+                <img src={person.photo} alt={person.name} className="h-full w-full object-cover" />
               </div>
-              <span className="text-[11px] font-medium text-foreground">{profile.name}</span>
-              <span className="text-[10px] text-muted-foreground">{profile.distance}</span>
+              <span className="text-[11px] font-medium text-foreground">{person.name}</span>
+              <span className="text-[10px] text-muted-foreground">{person.distance}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Active card */}
-      {currentIndex >= 0 && currentProfile && (
-        <div className="px-4 pb-6">
-          <SwipeCard
-            key={currentProfile.id}
-            {...currentProfile}
-            onLike={handleLike}
-            onPass={handlePass}
-          />
-        </div>
-      )}
-
-      {currentIndex < 0 && (
-        <div className="mx-4 mb-6 flex flex-col items-center justify-center rounded-2xl bg-card p-8 text-center shadow-[var(--shadow-soft)]">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage">
-            <span className="text-xl">🌿</span>
-          </div>
-          <h3 className="font-display text-lg font-semibold text-foreground">All caught up!</h3>
-          <p className="mt-1 text-sm text-muted-foreground">New people tomorrow. Enjoy the posts below.</p>
-        </div>
-      )}
-
-      {/* Community posts feed */}
+      {/* Community posts feed — vertical */}
       <div className="px-4">
         <p className="text-xs font-semibold text-muted-foreground px-1 mb-3">Community posts</p>
-        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+        <div className="space-y-4">
           {MOCK_POSTS.map((post) => (
             <PostCard
               key={post.id}
@@ -275,8 +241,8 @@ const Discover = () => {
               avatar={post.avatar}
               image={post.image}
               text={post.text}
-              likesCount={(likedPosts.has(post.id) ? 1 : 0) + Math.floor(Math.random() * 30 + 10)}
-              commentsCount={(comments[post.id]?.length || 0)}
+              likesCount={post.baseLikes + (likedPosts.has(post.id) ? 1 : 0)}
+              commentsCount={comments[post.id]?.length || 0}
               isLiked={likedPosts.has(post.id)}
               time={post.time}
               comments={comments[post.id] || []}
@@ -286,6 +252,47 @@ const Discover = () => {
           ))}
         </div>
       </div>
+
+      {/* Person detail dialog */}
+      <Dialog open={!!selectedPerson} onOpenChange={(open) => !open && setSelectedPerson(null)}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl">
+          <DialogTitle className="sr-only">{selectedPerson?.name}'s Profile</DialogTitle>
+          {selectedPerson && (
+            <>
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <img src={selectedPerson.photo} alt={selectedPerson.name} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <h3 className="font-display text-2xl font-semibold text-white">{selectedPerson.name}, {selectedPerson.age}</h3>
+                  <div className="mt-1 flex items-center gap-1 text-sm text-white/80">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{selectedPerson.distance}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-sm text-foreground leading-relaxed">{selectedPerson.bio}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedPerson.interests.map((interest) => (
+                    <Badge key={interest} variant="secondary" className="rounded-full px-3 py-1 text-xs font-medium">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    toast.success(`Friend request sent to ${selectedPerson.name}!`);
+                    setSelectedPerson(null);
+                  }}
+                  className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                >
+                  Send Friend Request
+                </button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -50,7 +50,7 @@ const PostCard = ({
   };
 
   return (
-    <div className="shrink-0 w-72 rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)] snap-start">
+    <div className="w-full rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)]">
       <div className="flex items-center gap-2.5 p-3 pb-2">
         <img src={avatar} alt={user} className="h-8 w-8 rounded-full object-cover ring-1 ring-border" />
         <div className="flex-1">
