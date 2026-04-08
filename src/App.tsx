@@ -36,7 +36,7 @@ const App = () => (
               <Route path="/chats" element={<Chats />} />
               <Route path="/chat/:chatId" element={<ChatConversation />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<AppSettings />} />
+              {/* Settings is now a sidebar, accessed via bottom nav */}
               <Route path="/settings/privacy" element={<PrivacySafety />} />
               <Route path="/settings/subscription" element={<Subscription />} />
               <Route path="/settings/notifications" element={<Notifications />} />
