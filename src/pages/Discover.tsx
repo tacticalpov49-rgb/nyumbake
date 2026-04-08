@@ -151,6 +151,13 @@ const Discover = () => {
     return post.content.toLowerCase().includes(q) || authorName.includes(q);
   });
 
+  // Filter friend seekers by search query
+  const filteredFriendSeekers = FRIEND_SEEKERS.filter((person) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return person.name.toLowerCase().includes(q) || person.bio.toLowerCase().includes(q) || person.interests.some((i) => i.toLowerCase().includes(q));
+  });
+
   return (
     <div className="min-h-screen bg-background pb-24 pt-4">
       <div className="px-5 pb-4">
@@ -186,7 +193,7 @@ const Discover = () => {
       <div className="px-4 pb-5">
         <p className="text-xs font-semibold text-muted-foreground mb-3 px-1">People looking for friends</p>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {FRIEND_SEEKERS.map((person) => (
+          {filteredFriendSeekers.map((person) => (
             <button key={person.id} onClick={() => setSelectedPerson(person)} className="shrink-0 flex flex-col items-center gap-1">
               <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-primary/50 hover:ring-primary transition-all">
                 <img src={person.photo} alt={person.name} className="h-full w-full object-cover" />
