@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Compass, MessageCircle, User, Plus, Menu, Bell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import CreatePostDialog from "@/components/CreatePostDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -12,6 +13,38 @@ const BottomNav = () => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      setUnreadCount(count || 0);
+    };
+
+    fetchCount();
+
+    const channel = supabase
+      .channel("unread-badge")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => fetchCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   if (location.pathname === "/welcome" || location.pathname === "/onboarding" || location.pathname.startsWith("/chat/") || location.pathname === "/auth") return null;
 
@@ -60,15 +93,23 @@ const BottomNav = () => {
             }
             const navTab = tab as { icon: any; label: string; path: string };
             const active = location.pathname === navTab.path;
+            const isAlerts = navTab.path === "/notifications";
             return (
               <button
                 key={navTab.path}
                 onClick={() => navigate(navTab.path)}
-                className={`flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
+                className={`relative flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <navTab.icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} />
+                <div className="relative">
+                  <navTab.icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} />
+                  {isAlerts && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] font-medium">{navTab.label}</span>
               </button>
             );
