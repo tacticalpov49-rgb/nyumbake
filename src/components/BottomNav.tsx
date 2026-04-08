@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Compass, MessageCircle, User, Plus, Menu } from "lucide-react";
+import { Compass, MessageCircle, User, Plus, Menu, Bell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import CreatePostDialog from "@/components/CreatePostDialog";
@@ -19,6 +19,7 @@ const BottomNav = () => {
     { icon: Compass, label: "Discover", path: "/" },
     { icon: MessageCircle, label: "Chats", path: "/chats" },
     { key: "plus" as const },
+    { icon: Bell, label: "Alerts", path: "/notifications" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 

@@ -160,24 +160,32 @@ const Profile = () => {
   const saveProfile = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      display_name: editForm.display_name,
-      username: editForm.username,
-      location: editForm.location,
-      interests: editInterests,
-      icebreaker: editForm.icebreaker,
-    } as any).eq("user_id", user.id);
-    if (error) { toast.error("Failed to save"); } else {
-      setProfile((prev) => prev ? {
-        ...prev,
+    try {
+      const { error } = await supabase.from("profiles").update({
         display_name: editForm.display_name,
         username: editForm.username,
         location: editForm.location,
         interests: editInterests,
         icebreaker: editForm.icebreaker,
-      } : prev);
-      toast.success("Profile updated!");
-      setEditing(false);
+      } as any).eq("user_id", user.id);
+      if (error) {
+        console.error("Profile update error:", error);
+        toast.error("Failed to save: " + error.message);
+      } else {
+        setProfile((prev) => prev ? {
+          ...prev,
+          display_name: editForm.display_name,
+          username: editForm.username,
+          location: editForm.location,
+          interests: editInterests,
+          icebreaker: editForm.icebreaker,
+        } : prev);
+        toast.success("Profile updated!");
+        setEditing(false);
+      }
+    } catch (err: any) {
+      console.error("Profile save exception:", err);
+      toast.error("Failed to save profile");
     }
     setSaving(false);
   };

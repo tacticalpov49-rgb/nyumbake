@@ -18,6 +18,7 @@ import PrivacySafety from "./pages/PrivacySafety";
 import Subscription from "./pages/Subscription";
 import Notifications from "./pages/Notifications";
 import HelpSupport from "./pages/HelpSupport";
+import Alerts from "./pages/Alerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/chats" element={<Chats />} />
                 <Route path="/chat/:chatId" element={<ChatConversation />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/notifications" element={<Alerts />} />
                 <Route path="/settings/privacy" element={<PrivacySafety />} />
                 <Route path="/settings/subscription" element={<Subscription />} />
                 <Route path="/settings/notifications" element={<Notifications />} />

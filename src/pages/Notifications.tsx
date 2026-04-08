@@ -25,7 +25,7 @@ const Notifications = () => {
   return (
     <div className="min-h-screen bg-background pb-24 pt-4">
       <div className="flex items-center gap-3 px-5 pb-4">
-        <button onClick={() => navigate("/settings")} className="text-foreground">
+        <button onClick={() => navigate(-1)} className="text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-display text-2xl font-bold text-foreground">Notifications</h1>
