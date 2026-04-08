@@ -230,38 +230,35 @@ const Discover = () => {
 
       {/* Person detail dialog */}
       <Dialog open={!!selectedPerson} onOpenChange={(open) => !open && setSelectedPerson(null)}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-xs p-0 overflow-hidden rounded-2xl max-h-[85vh] overflow-y-auto">
           <DialogTitle className="sr-only">{selectedPerson?.name}'s Profile</DialogTitle>
           {selectedPerson && (
             <>
-              <div className="relative aspect-[3/4] overflow-hidden">
+              <div className="relative aspect-square overflow-hidden">
                 <img src={selectedPerson.photo} alt={selectedPerson.name} className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h3 className="font-display text-2xl font-semibold text-white">{selectedPerson.name}, {selectedPerson.age}</h3>
-                  <div className="mt-1 flex items-center gap-1 text-sm text-white/80">
-                    <MapPin className="h-3.5 w-3.5" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="font-display text-xl font-semibold text-white">{selectedPerson.name}, {selectedPerson.age}</h3>
+                  <div className="mt-0.5 flex items-center gap-1 text-xs text-white/80">
+                    <MapPin className="h-3 w-3" />
                     <span>{selectedPerson.distance}</span>
                   </div>
                 </div>
               </div>
-              <div className="p-5 space-y-4">
-                <p className="text-sm text-foreground leading-relaxed">{selectedPerson.bio}</p>
-
-                {/* Post count */}
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <ImageIcon className="h-3.5 w-3.5" />
+              <div className="p-4 space-y-3">
+                <p className="text-xs text-foreground leading-relaxed">{selectedPerson.bio}</p>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <ImageIcon className="h-3 w-3" />
                   <span>{postCounts[selectedPerson.id] ?? Math.floor(Math.random() * 15 + 1)} posts</span>
                 </div>
-
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1">
                   {selectedPerson.interests.map((interest) => (
-                    <Badge key={interest} variant="secondary" className="rounded-full px-3 py-1 text-xs font-medium">{interest}</Badge>
+                    <Badge key={interest} variant="secondary" className="rounded-full px-2.5 py-0.5 text-[10px] font-medium">{interest}</Badge>
                   ))}
                 </div>
                 <button
                   onClick={() => { toast.success(`Friend request sent to ${selectedPerson.name}!`); setSelectedPerson(null); }}
-                  className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                  className="w-full rounded-full bg-primary py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
                 >
                   Send Friend Request
                 </button>
