@@ -124,7 +124,7 @@ const Discover = () => {
   };
 
   const addComment = async (postId: string, text: string) => {
-    if (!user) { toast("Sign in to comment"); navigate("/sign-in"); return; }
+    if (!user) { toast("Sign in to comment"); navigate("/auth"); return; }
     await supabase.from("post_comments" as any).insert({ post_id: postId, user_id: user.id, content: text } as any);
     setCommentCounts((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
     fetchComments(postId);
