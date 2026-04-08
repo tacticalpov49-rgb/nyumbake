@@ -110,8 +110,16 @@ const Discover = () => {
   const [likesLeft, setLikesLeft] = useState(5);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
-  const { user } = useAuth();
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) { setProfile(null); return; }
+    supabase.from("profiles").select("display_name, avatar_url, username").eq("user_id", user.id).single().then(({ data }) => {
+      if (data) setProfile(data);
+    });
+  }, [user]);
 
   const currentProfile = MOCK_PROFILES[currentIndex];
 
@@ -177,7 +185,28 @@ const Discover = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {!user && (
+            {user ? (
+              <>
+                <Link to="/profile" className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                      {(profile?.display_name || profile?.username || user.email)?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-foreground max-w-[80px] truncate">
+                    {profile?.display_name || profile?.username || user.email?.split("@")[0]}
+                  </span>
+                </Link>
+                <button
+                  onClick={async () => { await signOut(); toast.success("Signed out"); }}
+                  className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
               <button
                 onClick={() => navigate("/auth")}
                 className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"

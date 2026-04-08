@@ -6,12 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Profile {
+interface ProfileData {
   display_name: string | null;
   avatar_url: string | null;
-  location: string | null;
-  icebreaker: string | null;
-  interests: string[] | null;
+  username: string | null;
 }
 
 const Profile = () => {
