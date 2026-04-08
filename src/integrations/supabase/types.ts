@@ -65,6 +65,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          from_user_id: string | null
+          id: string
+          message: string
+          post_id: string | null
+          read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          message: string
+          post_id?: string | null
+          read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          message?: string
+          post_id?: string | null
+          read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_comments: {
         Row: {
           content: string
