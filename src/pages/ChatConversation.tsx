@@ -1,66 +1,106 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-const CHAT_DATA: Record<string, {
-  name: string;
-  avatar: string;
-  myIcebreaker: string;
-  theirIcebreaker: string;
-  messages: { id: number; from: "me" | "them"; text: string; time: string }[];
-}> = {
-  "1": {
-    name: "Amara",
-    avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop&crop=face",
-    myIcebreaker: "Sunsets from my balcony with a warm cup of chai — that's my happy place.",
-    theirIcebreaker: "A stranger's dog sat next to me on a bench today and it made my whole week.",
-    messages: [
-      { id: 1, from: "them", text: "I love that you mentioned chai sunsets! Do you have a favorite spot?", time: "3:12 PM" },
-      { id: 2, from: "me", text: "There's a rooftop café near Westlands with the best view 🌅", time: "3:14 PM" },
-      { id: 3, from: "them", text: "That hiking trail sounds amazing! When are you going?", time: "3:15 PM" },
-      { id: 4, from: "me", text: "This weekend! Want to join? It's beginner-friendly", time: "3:16 PM" },
-      { id: 5, from: "them", text: "I'd love that! Which trail is it?", time: "3:18 PM" },
-    ],
-  },
-  "2": {
-    name: "Jordan",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    myIcebreaker: "Sunsets from my balcony with a warm cup of chai — that's my happy place.",
-    theirIcebreaker: "Found a tiny bookshop yesterday that smelled like cedar. Bought 3 books I didn't need.",
-    messages: [
-      { id: 1, from: "me", text: "A bookshop that smells like cedar? That sounds like a dream!", time: "1:30 PM" },
-      { id: 2, from: "them", text: "Right? It's hidden on Koinange Street. Tiny place, huge soul.", time: "1:32 PM" },
-      { id: 3, from: "them", text: "I'll send you the name of that bookshop 📚", time: "1:33 PM" },
-    ],
-  },
-};
+interface Message {
+  id: string;
+  sender_id: string;
+  text: string;
+  created_at: string;
+}
 
 const ChatConversation = () => {
-  const { chatId } = useParams<{ chatId: string }>();
+  const { chatId: otherUserId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
-  const chat = CHAT_DATA[chatId || "1"];
-  const [messages, setMessages] = useState(chat?.messages || []);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [otherProfile, setOtherProfile] = useState<{ display_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  if (!chat) {
-    navigate("/chats");
+  const scrollToBottom = () => {
+    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+  };
+
+  // Fetch other user's profile
+  useEffect(() => {
+    if (!otherUserId) return;
+    supabase.from("profiles").select("display_name, avatar_url, username").eq("user_id", otherUserId).single().then(({ data }: any) => {
+      if (data) setOtherProfile(data);
+    });
+  }, [otherUserId]);
+
+  // Fetch messages
+  const fetchMessages = useCallback(async () => {
+    if (!user || !otherUserId) return;
+    const { data } = await supabase
+      .from("messages" as any)
+      .select("*")
+      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
+      .order("created_at", { ascending: true }) as any;
+    if (data) {
+      setMessages(data);
+      scrollToBottom();
+      // Mark unread messages as read
+      await supabase
+        .from("messages" as any)
+        .update({ read: true } as any)
+        .eq("sender_id", otherUserId)
+        .eq("receiver_id", user.id)
+        .eq("read", false);
+    }
+  }, [user, otherUserId]);
+
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user || !otherUserId) return;
+    const channel = supabase
+      .channel(`chat-${otherUserId}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+      }, (payload: any) => {
+        const msg = payload.new;
+        if (
+          (msg.sender_id === user.id && msg.receiver_id === otherUserId) ||
+          (msg.sender_id === otherUserId && msg.receiver_id === user.id)
+        ) {
+          setMessages((prev) => [...prev, msg]);
+          scrollToBottom();
+          // Mark as read if received
+          if (msg.sender_id === otherUserId) {
+            supabase.from("messages" as any).update({ read: true } as any).eq("id", msg.id);
+          }
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, otherUserId]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !user || !otherUserId) return;
+    const text = input.trim();
+    setInput("");
+    await supabase.from("messages" as any).insert({
+      sender_id: user.id,
+      receiver_id: otherUserId,
+      text,
+    } as any);
+  };
+
+  if (!user) {
+    navigate("/auth");
     return null;
   }
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const newMsg = {
-      id: messages.length + 1,
-      from: "me" as const,
-      text: input.trim(),
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages((prev) => [...prev, newMsg]);
-    setInput("");
-    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
-  };
+  const otherName = otherProfile?.display_name || otherProfile?.username || "User";
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -69,45 +109,39 @@ const ChatConversation = () => {
         <button onClick={() => navigate("/chats")} className="text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <img src={chat.avatar} alt={chat.name} className="h-9 w-9 rounded-full object-cover ring-2 ring-sage" />
+        <Avatar className="h-9 w-9">
+          {otherProfile?.avatar_url ? <AvatarImage src={otherProfile.avatar_url} /> : null}
+          <AvatarFallback className="text-xs bg-primary/10 text-primary">{otherName[0]?.toUpperCase()}</AvatarFallback>
+        </Avatar>
         <div>
-          <p className="text-sm font-semibold text-foreground">{chat.name}</p>
-          <p className="text-[11px] text-muted-foreground">Matched 2 days ago</p>
+          <p className="text-sm font-semibold text-foreground">{otherName}</p>
         </div>
       </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {/* Icebreaker header */}
-        <div className="space-y-2 mb-6">
-          <p className="text-center text-[11px] font-medium text-muted-foreground">Your icebreakers started this conversation</p>
-          <div className="rounded-xl bg-sage p-3">
-            <p className="text-[10px] font-semibold text-sage-foreground/60 mb-0.5">{chat.name}'s answer</p>
-            <p className="text-xs text-sage-foreground italic">"{chat.theirIcebreaker}"</p>
-          </div>
-          <div className="rounded-xl bg-peach p-3">
-            <p className="text-[10px] font-semibold text-peach-foreground/60 mb-0.5">Your answer</p>
-            <p className="text-xs text-peach-foreground italic">"{chat.myIcebreaker}"</p>
-          </div>
-        </div>
-
-        {/* Messages */}
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                msg.from === "me"
-                  ? "rounded-br-md bg-primary text-primary-foreground"
-                  : "rounded-bl-md bg-card text-foreground shadow-[var(--shadow-card)]"
-              }`}
-            >
-              <p className="text-sm leading-relaxed">{msg.text}</p>
-              <p className={`mt-1 text-[10px] ${msg.from === "me" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                {msg.time}
-              </p>
+        {messages.length === 0 && (
+          <p className="text-center text-sm text-muted-foreground py-12">No messages yet. Say hi! 👋</p>
+        )}
+        {messages.map((msg) => {
+          const isMe = msg.sender_id === user.id;
+          return (
+            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                  isMe
+                    ? "rounded-br-md bg-primary text-primary-foreground"
+                    : "rounded-bl-md bg-card text-foreground shadow-[var(--shadow-card)]"
+                }`}
+              >
+                <p className="text-sm leading-relaxed">{msg.text}</p>
+                <p className={`mt-1 text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Input */}
