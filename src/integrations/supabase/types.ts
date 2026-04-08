@@ -10,55 +10,58 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      bots: {
+      matches: {
         Row: {
-          category: string
           created_at: string
-          description: string
-          download_path: string | null
-          features: string[]
           id: string
-          image_emoji: string
-          instructions: string
-          is_active: boolean
-          name: string
-          price: number
-          short_description: string
-          updated_at: string
+          status: string
+          user1_id: string
+          user2_id: string
         }
         Insert: {
-          category?: string
           created_at?: string
-          description?: string
-          download_path?: string | null
-          features?: string[]
           id?: string
-          image_emoji?: string
-          instructions?: string
-          is_active?: boolean
-          name: string
-          price?: number
-          short_description?: string
-          updated_at?: string
+          status?: string
+          user1_id: string
+          user2_id: string
         }
         Update: {
-          category?: string
           created_at?: string
-          description?: string
-          download_path?: string | null
-          features?: string[]
           id?: string
-          image_emoji?: string
-          instructions?: string
-          is_active?: boolean
-          name?: string
-          price?: number
-          short_description?: string
-          updated_at?: string
+          status?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          created_at: string
+          id: string
+          read: boolean
+          receiver_id: string
+          sender_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          read?: boolean
+          receiver_id: string
+          sender_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          read?: boolean
+          receiver_id?: string
+          sender_id?: string
+          text?: string
         }
         Relationships: []
       }
@@ -68,7 +71,6 @@ export type Database = {
           created_at: string
           id: string
           post_id: string
-          updated_at: string
           user_id: string
         }
         Insert: {
@@ -76,7 +78,6 @@ export type Database = {
           created_at?: string
           id?: string
           post_id: string
-          updated_at?: string
           user_id: string
         }
         Update: {
@@ -84,7 +85,6 @@ export type Database = {
           created_at?: string
           id?: string
           post_id?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -156,9 +156,12 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
+          icebreaker: string | null
           id: string
+          interests: string[] | null
           latitude: number | null
           location: string | null
           longitude: number | null
@@ -168,9 +171,12 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          icebreaker?: string | null
           id?: string
+          interests?: string[] | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null
@@ -180,9 +186,12 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          icebreaker?: string | null
           id?: string
+          interests?: string[] | null
           latitude?: number | null
           location?: string | null
           longitude?: number | null
@@ -192,129 +201,15 @@ export type Database = {
         }
         Relationships: []
       }
-      ratings: {
-        Row: {
-          bot_id: string
-          created_at: string
-          id: string
-          rating: number
-          review: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bot_id: string
-          created_at?: string
-          id?: string
-          rating: number
-          review?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bot_id?: string
-          created_at?: string
-          id?: string
-          rating?: number
-          review?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ratings_bot_id_fkey"
-            columns: ["bot_id"]
-            isOneToOne: false
-            referencedRelation: "bots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      transactions: {
-        Row: {
-          amount: number
-          bot_id: string | null
-          created_at: string
-          customer_email: string
-          download_expires: string | null
-          download_token: string | null
-          id: string
-          payment_status: string
-          paypal_order_id: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          amount?: number
-          bot_id?: string | null
-          created_at?: string
-          customer_email?: string
-          download_expires?: string | null
-          download_token?: string | null
-          id?: string
-          payment_status?: string
-          paypal_order_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          bot_id?: string | null
-          created_at?: string
-          customer_email?: string
-          download_expires?: string | null
-          download_token?: string | null
-          id?: string
-          payment_status?: string
-          paypal_order_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_bot_id_fkey"
-            columns: ["bot_id"]
-            isOneToOne: false
-            referencedRelation: "bots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_roles: {
-        Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      bootstrap_admin: { Args: { _user_id: string }; Returns: boolean }
-      check_admins_exist: { Args: never; Returns: boolean }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -441,8 +336,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "moderator", "user"],
-    },
+    Enums: {},
   },
 } as const
