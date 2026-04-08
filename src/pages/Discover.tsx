@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import PostCard from "@/components/PostCard";
+import SearchBar from "@/components/SearchBar";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, MapPin, X } from "lucide-react";
+import { User, MapPin, X, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { LocationOption } from "@/data/locations";
 
 const FRIEND_SEEKERS = [
   { id: 1, name: "Amara", age: 26, distance: "3 km away", photo: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop&crop=face", bio: "Love hiking trails and finding hidden coffee spots 🌿", interests: ["Hiking", "Coffee", "Photography"] },
@@ -34,6 +37,9 @@ const Discover = () => {
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
   const [postProfiles, setPostProfiles] = useState<Record<string, { display_name: string | null; avatar_url: string | null; username: string | null }>>({});
   const [selectedPerson, setSelectedPerson] = useState<typeof FRIEND_SEEKERS[0] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<LocationOption | null>(null);
+  const [postCounts, setPostCounts] = useState<Record<number, number>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -41,7 +47,6 @@ const Discover = () => {
     const { data } = await supabase.from("posts" as any).select("*").order("created_at", { ascending: false }).limit(50) as any;
     if (data) {
       setPosts(data);
-      // Fetch profiles for post authors
       const userIds = [...new Set(data.map((p: DBPost) => p.user_id))];
       if (userIds.length > 0) {
         const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url, username").in("user_id", userIds as string[]);
@@ -51,7 +56,6 @@ const Discover = () => {
           setPostProfiles(map);
         }
       }
-      // Fetch like counts
       const postIds = data.map((p: DBPost) => p.id);
       if (postIds.length > 0) {
         const { data: likes } = await supabase.from("post_likes" as any).select("post_id") as any;
@@ -60,12 +64,10 @@ const Discover = () => {
           likes.forEach((l: any) => { counts[l.post_id] = (counts[l.post_id] || 0) + 1; });
           setLikeCounts(counts);
         }
-        // Fetch user's likes
         if (user) {
           const { data: myLikes } = await supabase.from("post_likes" as any).select("post_id").eq("user_id", user.id) as any;
           if (myLikes) setLikedPosts(new Set(myLikes.map((l: any) => l.post_id)));
         }
-        // Fetch comment counts
         const { data: cmts } = await supabase.from("post_comments" as any).select("post_id") as any;
         if (cmts) {
           const cc: Record<string, number> = {};
@@ -78,7 +80,6 @@ const Discover = () => {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-  // Listen for new posts
   useEffect(() => {
     const handler = () => fetchPosts();
     window.addEventListener("posts-updated", handler);
@@ -109,7 +110,6 @@ const Discover = () => {
   const fetchComments = async (postId: string) => {
     const { data } = await supabase.from("post_comments" as any).select("*").eq("post_id", postId).order("created_at", { ascending: true }) as any;
     if (data) {
-      // Fetch profiles for comment authors
       const userIds = [...new Set(data.map((c: any) => c.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds as string[]);
       const profileMap: Record<string, any> = {};
@@ -139,6 +139,15 @@ const Discover = () => {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
+  // Filter posts by search query
+  const filteredPosts = posts.filter((post) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const authorProfile = postProfiles[post.user_id];
+    const authorName = (authorProfile?.display_name || authorProfile?.username || "").toLowerCase();
+    return post.content.toLowerCase().includes(q) || authorName.includes(q);
+  });
+
   return (
     <div className="min-h-screen bg-background pb-24 pt-4">
       <div className="px-5 pb-4">
@@ -148,6 +157,7 @@ const Discover = () => {
             <p className="mt-0.5 text-xs text-muted-foreground">See what's happening around you</p>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <Link to="/profile" className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -169,6 +179,9 @@ const Discover = () => {
         </div>
       </div>
 
+      {/* Search bar */}
+      <SearchBar onSearch={setSearchQuery} onLocationFilter={setSelectedLocation} selectedLocation={selectedLocation} />
+
       {/* People looking for friends */}
       <div className="px-4 pb-5">
         <p className="text-xs font-semibold text-muted-foreground mb-3 px-1">People looking for friends</p>
@@ -188,19 +201,20 @@ const Discover = () => {
       {/* Community posts feed */}
       <div className="px-4">
         <p className="text-xs font-semibold text-muted-foreground px-1 mb-3">Community posts</p>
-        {posts.length === 0 && (
+        {filteredPosts.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">No posts yet. Be the first to share!</p>
+            <p className="text-sm">{searchQuery ? "No posts match your search." : "No posts yet. Be the first to share!"}</p>
           </div>
         )}
         <div className="space-y-4">
-          {posts.map((post) => {
+          {filteredPosts.map((post) => {
             const authorProfile = postProfiles[post.user_id];
+            const authorName = authorProfile?.display_name || authorProfile?.username || "Anonymous";
             return (
               <PostCard
                 key={post.id}
                 id={post.id}
-                user={authorProfile?.display_name || authorProfile?.username || "User"}
+                user={authorName}
                 avatar={authorProfile?.avatar_url || ""}
                 image={post.image_url}
                 text={post.content}
@@ -237,6 +251,13 @@ const Discover = () => {
               </div>
               <div className="p-5 space-y-4">
                 <p className="text-sm text-foreground leading-relaxed">{selectedPerson.bio}</p>
+
+                {/* Post count */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>{postCounts[selectedPerson.id] ?? Math.floor(Math.random() * 15 + 1)} posts</span>
+                </div>
+
                 <div className="flex flex-wrap gap-1.5">
                   {selectedPerson.interests.map((interest) => (
                     <Badge key={interest} variant="secondary" className="rounded-full px-3 py-1 text-xs font-medium">{interest}</Badge>
