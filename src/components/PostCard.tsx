@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Heart, MessageCircle, Send } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Comment {
   id: string;
@@ -30,6 +33,8 @@ const PostCard = ({
 }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleToggleComments = () => {
     const next = !showComments;
@@ -37,7 +42,21 @@ const PostCard = ({
     if (next && onExpandComments) onExpandComments();
   };
 
+  const handleLike = () => {
+    if (!authUser) {
+      toast("Sign in to like posts");
+      navigate("/auth");
+      return;
+    }
+    onToggleLike();
+  };
+
   const handleSubmitComment = () => {
+    if (!authUser) {
+      toast("Sign in to comment");
+      navigate("/auth");
+      return;
+    }
     if (!commentText.trim()) return;
     onAddComment(commentText.trim());
     setCommentText("");
@@ -59,7 +78,7 @@ const PostCard = ({
       <div className="p-3 space-y-2">
         <p className="text-sm text-foreground leading-relaxed">{text}</p>
         <div className="flex items-center gap-4">
-          <button onClick={onToggleLike} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+          <button onClick={handleLike} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
             <Heart className={`h-4 w-4 ${isLiked ? "fill-primary text-primary" : ""}`} />
             <span>{likesCount}</span>
           </button>
@@ -82,7 +101,7 @@ const PostCard = ({
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmitComment()}
-                placeholder="Add a comment..."
+                placeholder={authUser ? "Add a comment..." : "Sign in to comment..."}
                 className="flex-1 rounded-lg border border-input bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
               <button onClick={handleSubmitComment} className="text-primary">
