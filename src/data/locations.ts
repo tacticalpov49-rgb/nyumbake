@@ -1,7 +1,7 @@
 export interface LocationOption {
   label: string;
   country: string;
-  type: "city" | "state" | "county";
+  type: "city" | "state" | "county" | "region";
 }
 
 export const LOCATIONS: LocationOption[] = [
@@ -18,6 +18,57 @@ export const LOCATIONS: LocationOption[] = [
   { label: "Nyeri", country: "Kenya", type: "county" },
   { label: "Murang'a", country: "Kenya", type: "county" },
   { label: "Nyandarua", country: "Kenya", type: "county" },
+  { label: "Meru", country: "Kenya", type: "county" },
+  { label: "Laikipia", country: "Kenya", type: "county" },
+  { label: "Nandi", country: "Kenya", type: "county" },
+  { label: "Bungoma", country: "Kenya", type: "county" },
+  { label: "Kakamega", country: "Kenya", type: "county" },
+  { label: "Trans Nzoia", country: "Kenya", type: "county" },
+  { label: "Embu", country: "Kenya", type: "county" },
+  { label: "Kirinyaga", country: "Kenya", type: "county" },
+  // Uganda - Districts
+  { label: "Kampala", country: "Uganda", type: "county" },
+  { label: "Wakiso", country: "Uganda", type: "county" },
+  { label: "Mukono", country: "Uganda", type: "county" },
+  { label: "Jinja", country: "Uganda", type: "county" },
+  { label: "Mbarara", country: "Uganda", type: "county" },
+  { label: "Gulu", country: "Uganda", type: "county" },
+  { label: "Lira", country: "Uganda", type: "county" },
+  { label: "Mbale", country: "Uganda", type: "county" },
+  { label: "Masaka", country: "Uganda", type: "county" },
+  { label: "Fort Portal", country: "Uganda", type: "county" },
+  { label: "Entebbe", country: "Uganda", type: "county" },
+  { label: "Soroti", country: "Uganda", type: "county" },
+  // Rwanda - Districts
+  { label: "Kigali", country: "Rwanda", type: "county" },
+  { label: "Butare (Huye)", country: "Rwanda", type: "county" },
+  { label: "Gisenyi (Rubavu)", country: "Rwanda", type: "county" },
+  { label: "Musanze", country: "Rwanda", type: "county" },
+  { label: "Rwamagana", country: "Rwanda", type: "county" },
+  { label: "Nyagatare", country: "Rwanda", type: "county" },
+  { label: "Muhanga", country: "Rwanda", type: "county" },
+  { label: "Karongi", country: "Rwanda", type: "county" },
+  // Ethiopia - Regions/Cities
+  { label: "Addis Ababa", country: "Ethiopia", type: "region" },
+  { label: "Dire Dawa", country: "Ethiopia", type: "region" },
+  { label: "Bahir Dar", country: "Ethiopia", type: "region" },
+  { label: "Hawassa", country: "Ethiopia", type: "region" },
+  { label: "Mekelle", country: "Ethiopia", type: "region" },
+  { label: "Adama (Nazret)", country: "Ethiopia", type: "region" },
+  { label: "Jimma", country: "Ethiopia", type: "region" },
+  { label: "Gondar", country: "Ethiopia", type: "region" },
+  { label: "Harar", country: "Ethiopia", type: "region" },
+  // Egypt - Governorates
+  { label: "Cairo", country: "Egypt", type: "county" },
+  { label: "Alexandria", country: "Egypt", type: "county" },
+  { label: "Giza", country: "Egypt", type: "county" },
+  { label: "Luxor", country: "Egypt", type: "county" },
+  { label: "Aswan", country: "Egypt", type: "county" },
+  { label: "Port Said", country: "Egypt", type: "county" },
+  { label: "Suez", country: "Egypt", type: "county" },
+  { label: "Mansoura", country: "Egypt", type: "county" },
+  { label: "Tanta", country: "Egypt", type: "county" },
+  { label: "Ismailia", country: "Egypt", type: "county" },
   // Nigeria - States
   { label: "Lagos", country: "Nigeria", type: "state" },
   { label: "Abuja (FCT)", country: "Nigeria", type: "state" },
@@ -33,6 +84,8 @@ export const LOCATIONS: LocationOption[] = [
   { label: "Dar es Salaam", country: "Tanzania", type: "city" },
   { label: "Arusha", country: "Tanzania", type: "city" },
   { label: "Dodoma", country: "Tanzania", type: "city" },
+  { label: "Mwanza", country: "Tanzania", type: "city" },
+  { label: "Zanzibar", country: "Tanzania", type: "city" },
   // Ghana - Regions
   { label: "Accra", country: "Ghana", type: "city" },
   { label: "Kumasi", country: "Ghana", type: "city" },
