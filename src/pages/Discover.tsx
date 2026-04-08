@@ -111,12 +111,15 @@ const Discover = () => {
     const { data } = await supabase.from("post_comments" as any).select("*").eq("post_id", postId).order("created_at", { ascending: true }) as any;
     if (data) {
       const userIds = [...new Set(data.map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", userIds as string[]);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", userIds as string[]);
       const profileMap: Record<string, any> = {};
       profiles?.forEach((p: any) => { profileMap[p.user_id] = p; });
       const enriched = data.map((c: any) => ({
         ...c,
-        profiles: profileMap[c.user_id] || { display_name: "User", avatar_url: null },
+        profiles: profileMap[c.user_id] ? {
+          display_name: profileMap[c.user_id].display_name || profileMap[c.user_id].username || "User",
+          avatar_url: profileMap[c.user_id].avatar_url,
+        } : { display_name: "User", avatar_url: null },
         text: c.content,
       }));
       setComments((prev) => ({ ...prev, [postId]: enriched }));
