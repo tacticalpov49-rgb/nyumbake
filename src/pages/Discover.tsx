@@ -151,6 +151,13 @@ const Discover = () => {
     return post.content.toLowerCase().includes(q) || authorName.includes(q);
   });
 
+  // Filter friend seekers by search query
+  const filteredFriendSeekers = FRIEND_SEEKERS.filter((person) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return person.name.toLowerCase().includes(q) || person.bio.toLowerCase().includes(q) || person.interests.some((i) => i.toLowerCase().includes(q));
+  });
+
   return (
     <div className="min-h-screen bg-background pb-24 pt-4">
       <div className="px-5 pb-4">
