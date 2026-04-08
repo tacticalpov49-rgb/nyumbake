@@ -202,41 +202,38 @@ const Discover = () => {
       )}
 
       {/* Community posts feed */}
-      <div className="px-4 space-y-4">
-        <p className="text-xs font-semibold text-muted-foreground px-1">Community posts</p>
-        {MOCK_POSTS.map((post) => (
-          <div key={post.id} className="rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)]">
-            {/* Post header */}
-            <div className="flex items-center gap-2.5 p-3 pb-2">
-              <img src={post.avatar} alt={post.user} className="h-8 w-8 rounded-full object-cover ring-1 ring-border" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{post.user}</p>
-                <p className="text-[10px] text-muted-foreground">{post.time}</p>
+      <div className="px-4">
+        <p className="text-xs font-semibold text-muted-foreground px-1 mb-3">Community posts</p>
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+          {MOCK_POSTS.map((post) => (
+            <div key={post.id} className="shrink-0 w-64 rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)]">
+              <div className="flex items-center gap-2.5 p-3 pb-2">
+                <img src={post.avatar} alt={post.user} className="h-8 w-8 rounded-full object-cover ring-1 ring-border" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{post.user}</p>
+                  <p className="text-[10px] text-muted-foreground">{post.time}</p>
+                </div>
+              </div>
+              <img src={post.image} alt="" className="w-full aspect-[4/3] object-cover" />
+              <div className="p-3 space-y-2">
+                <p className="text-sm text-foreground leading-relaxed line-clamp-2">{post.text}</p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => togglePostLike(post.id)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <Heart className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-primary text-primary" : ""}`} />
+                    <span>{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
+                  </button>
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{post.comments}</span>
+                  </button>
+                </div>
               </div>
             </div>
-            {/* Image */}
-            <img src={post.image} alt="" className="w-full aspect-[4/3] object-cover" />
-            {/* Content */}
-            <div className="p-3 space-y-2">
-              <p className="text-sm text-foreground leading-relaxed">{post.text}</p>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => togglePostLike(post.id)}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Heart
-                    className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-primary text-primary" : ""}`}
-                  />
-                  <span>{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
-                </button>
-                <button className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MessageCircle className="h-4 w-4" />
-                  <span>{post.comments}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
