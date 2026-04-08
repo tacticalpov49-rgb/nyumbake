@@ -49,7 +49,7 @@ const AppSidebar = ({ open, onOpenChange }: AppSidebarProps) => {
           <div className="mx-4 my-4 rounded-2xl bg-muted p-4 text-center">
             <p className="text-sm font-medium text-foreground mb-2">Sign in to unlock all features</p>
             <button
-              onClick={() => handleNav("/sign-in")}
+              onClick={() => handleNav("/auth")}
               className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground"
             >
               Sign In / Sign Up

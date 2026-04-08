@@ -93,7 +93,7 @@ const Discover = () => {
   }, [user]);
 
   const togglePostLike = async (postId: string) => {
-    if (!user) { toast("Sign in to like posts"); navigate("/sign-in"); return; }
+    if (!user) { toast("Sign in to like posts"); navigate("/auth"); return; }
     const isLiked = likedPosts.has(postId);
     if (isLiked) {
       await supabase.from("post_likes" as any).delete().eq("post_id", postId).eq("user_id", user.id);
@@ -124,7 +124,7 @@ const Discover = () => {
   };
 
   const addComment = async (postId: string, text: string) => {
-    if (!user) { toast("Sign in to comment"); navigate("/sign-in"); return; }
+    if (!user) { toast("Sign in to comment"); navigate("/auth"); return; }
     await supabase.from("post_comments" as any).insert({ post_id: postId, user_id: user.id, content: text } as any);
     setCommentCounts((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
     fetchComments(postId);
@@ -161,7 +161,7 @@ const Discover = () => {
                 </span>
               </Link>
             ) : (
-              <button onClick={() => navigate("/sign-in")} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+              <button onClick={() => navigate("/auth")} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
                 Sign In
               </button>
             )}

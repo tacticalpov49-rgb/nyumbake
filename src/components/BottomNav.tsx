@@ -26,7 +26,7 @@ const BottomNav = () => {
   const handlePlusClick = () => {
     if (!user) {
       toast("Sign in to create a post");
-      navigate("/sign-in");
+      navigate("/auth");
       return;
     }
     setPostDialogOpen(true);

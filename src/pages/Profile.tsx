@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,6 +25,8 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({ display_name: "", username: "", location: "" });
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -47,6 +49,46 @@ const Profile = () => {
     setEditing(true);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a JPG, PNG, or WebP image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateErr } = await supabase.from("profiles").update({
+        avatar_url: avatarUrl,
+      } as any).eq("user_id", user.id);
+      if (updateErr) throw updateErr;
+
+      setProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : prev);
+      toast.success("Profile photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const detectLocation = () => {
     if (!navigator.geolocation) { toast.error("Geolocation not supported"); return; }
     setDetectingLocation(true);
@@ -59,7 +101,6 @@ const Profile = () => {
           const country = data.address?.country || "";
           const loc = [city, country].filter(Boolean).join(", ");
           setEditForm((prev) => ({ ...prev, location: loc }));
-          // Save coordinates too
           if (user) {
             await supabase.from("profiles").update({
               latitude: pos.coords.latitude,
@@ -101,7 +142,7 @@ const Profile = () => {
           </div>
           <h2 className="font-display text-xl font-bold text-foreground mb-2">Join CircleMeet</h2>
           <p className="text-sm text-muted-foreground mb-6">Sign in to see your profile and connect with people</p>
-          <Button onClick={() => navigate("/sign-in")} className="rounded-full px-8">Sign In / Sign Up</Button>
+          <Button onClick={() => navigate("/auth")} className="rounded-full px-8">Sign In / Sign Up</Button>
         </div>
       </div>
     );
@@ -122,8 +163,23 @@ const Profile = () => {
       <div className="mx-4 overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)]">
         <div className="relative aspect-square max-h-72">
           <img src={avatarUrl} alt="Your profile" className="h-full w-full object-cover" />
-          <button className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm shadow-md">
-            <Camera className="h-5 w-5 text-foreground" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm shadow-md"
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="h-5 w-5 text-foreground animate-spin" />
+            ) : (
+              <Camera className="h-5 w-5 text-foreground" />
+            )}
           </button>
         </div>
 
