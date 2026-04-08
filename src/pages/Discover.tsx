@@ -93,7 +93,7 @@ const Discover = () => {
   }, [user]);
 
   const togglePostLike = async (postId: string) => {
-    if (!user) { toast("Sign in to like posts"); navigate("/sign-in"); return; }
+    if (!user) { toast("Sign in to like posts"); navigate("/auth"); return; }
     const isLiked = likedPosts.has(postId);
     if (isLiked) {
       await supabase.from("post_likes" as any).delete().eq("post_id", postId).eq("user_id", user.id);
