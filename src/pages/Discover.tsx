@@ -159,16 +159,13 @@ const Discover = () => {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {user ? (
-              <Link to="/profile" className="flex items-center gap-2">
+              <Link to="/profile">
                 <Avatar className="h-8 w-8">
                   {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} /> : null}
                   <AvatarFallback className="text-xs bg-primary/10 text-primary">
                     {(profile?.display_name || profile?.username || user.email)?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-foreground max-w-[80px] truncate">
-                  {profile?.display_name || profile?.username || user.email?.split("@")[0]}
-                </span>
               </Link>
             ) : (
               <button onClick={() => navigate("/auth")} className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
