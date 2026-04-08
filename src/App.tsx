@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/hooks/use-theme";
 import BottomNav from "@/components/BottomNav";
 import Welcome from "./pages/Welcome";
 import Onboarding from "./pages/Onboarding";
@@ -23,32 +24,33 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="mx-auto max-w-md min-h-screen bg-background">
-            <Routes>
-              <Route path="/welcome" element={<Welcome />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/" element={<Discover />} />
-              <Route path="/chats" element={<Chats />} />
-              <Route path="/chat/:chatId" element={<ChatConversation />} />
-              <Route path="/profile" element={<Profile />} />
-              {/* Settings is now a sidebar, accessed via bottom nav */}
-              <Route path="/settings/privacy" element={<PrivacySafety />} />
-              <Route path="/settings/subscription" element={<Subscription />} />
-              <Route path="/settings/notifications" element={<Notifications />} />
-              <Route path="/settings/help" element={<HelpSupport />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <BottomNav />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="mx-auto max-w-md min-h-screen bg-background">
+              <Routes>
+                <Route path="/welcome" element={<Welcome />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/" element={<Discover />} />
+                <Route path="/chats" element={<Chats />} />
+                <Route path="/chat/:chatId" element={<ChatConversation />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings/privacy" element={<PrivacySafety />} />
+                <Route path="/settings/subscription" element={<Subscription />} />
+                <Route path="/settings/notifications" element={<Notifications />} />
+                <Route path="/settings/help" element={<HelpSupport />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <BottomNav />
+            </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
