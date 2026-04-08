@@ -39,7 +39,7 @@ const AppSidebar = ({ open, onOpenChange }: AppSidebarProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72 p-0 bg-background">
+      <SheetContent side="right" className="w-72 p-0 bg-background">
         <SheetTitle className="sr-only">Settings</SheetTitle>
         <div className="p-5 pb-3 border-b border-border">
           <h2 className="font-display text-xl font-bold text-foreground">Settings</h2>

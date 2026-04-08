@@ -205,7 +205,7 @@ const Discover = () => {
         <div className="space-y-4">
           {filteredPosts.map((post) => {
             const authorProfile = postProfiles[post.user_id];
-            const authorName = authorProfile?.display_name || authorProfile?.username || "Anonymous";
+            const authorName = authorProfile?.display_name || authorProfile?.username || "User";
             return (
               <PostCard
                 key={post.id}
