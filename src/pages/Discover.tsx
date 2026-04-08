@@ -184,12 +184,11 @@ const Discover = () => {
         <p className="text-xs font-semibold text-muted-foreground mb-3 px-1">People looking for friends</p>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {FRIEND_SEEKERS.map((person) => (
-            <button key={person.id} onClick={() => setSelectedPerson(person)} className="shrink-0 flex flex-col items-center gap-1.5">
-              <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-primary/50 hover:ring-primary transition-all">
+            <button key={person.id} onClick={() => setSelectedPerson(person)} className="shrink-0 flex flex-col items-center gap-1">
+              <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-primary/50 hover:ring-primary transition-all">
                 <img src={person.photo} alt={person.name} className="h-full w-full object-cover" />
               </div>
-              <span className="text-[11px] font-medium text-foreground">{person.name}</span>
-              <span className="text-[10px] text-muted-foreground">{person.distance}</span>
+              <span className="text-[10px] font-medium text-foreground">{person.name}</span>
             </button>
           ))}
         </div>
