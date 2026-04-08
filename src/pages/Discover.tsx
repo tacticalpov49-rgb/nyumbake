@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SwipeCard from "@/components/SwipeCard";
+import PostCard from "@/components/PostCard";
 import { toast } from "sonner";
-import { Heart, MapPin, MessageCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const MOCK_PROFILES = [
   {
@@ -45,71 +47,69 @@ const MOCK_PROFILES = [
 
 const MOCK_POSTS = [
   {
-    id: 1,
+    id: "mock-1",
     user: "Amara",
     avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop",
     text: "Explored a hidden waterfall today. Nature always heals. 🌿",
-    likes: 24,
-    comments: 5,
     time: "2h ago",
   },
   {
-    id: 2,
+    id: "mock-2",
     user: "Jordan",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=300&fit=crop",
     text: "Current read: 'The Art of Stillness'. Highly recommend for overthinkers like me 📖",
-    likes: 18,
-    comments: 8,
     time: "4h ago",
   },
   {
-    id: 3,
+    id: "mock-3",
     user: "Lena",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
     text: "Pour-over mornings are a ritual, not a routine. Who else is a coffee nerd? ☕",
-    likes: 31,
-    comments: 12,
     time: "5h ago",
   },
   {
-    id: 4,
+    id: "mock-4",
     user: "Kai",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400&h=300&fit=crop",
     text: "Morning run through the park. The city is beautiful at 6am when nobody's around.",
-    likes: 15,
-    comments: 3,
     time: "6h ago",
   },
   {
-    id: 5,
+    id: "mock-5",
     user: "Amara",
     avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop",
     text: "Made jollof rice for the first time. Verdict: my grandma would be proud 🍚",
-    likes: 42,
-    comments: 15,
     time: "8h ago",
   },
   {
-    id: 6,
+    id: "mock-6",
     user: "Lena",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
     image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
     text: "Sunset yoga on the rooftop. This is what peace looks like 🧘‍♀️",
-    likes: 27,
-    comments: 7,
     time: "10h ago",
   },
 ];
 
+interface Comment {
+  id: string;
+  text: string;
+  created_at: string;
+  profiles: { display_name: string | null; avatar_url: string | null } | null;
+}
+
 const Discover = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likesLeft, setLikesLeft] = useState(5);
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const currentProfile = MOCK_PROFILES[currentIndex];
 
@@ -133,13 +133,34 @@ const Discover = () => {
 
   const handlePass = () => handleNext();
 
-  const togglePostLike = (postId: number) => {
+  const togglePostLike = (postId: string) => {
+    if (!user) {
+      toast("Sign in to like posts", { description: "Create an account to interact" });
+      navigate("/auth");
+      return;
+    }
     setLikedPosts((prev) => {
       const next = new Set(prev);
       if (next.has(postId)) next.delete(postId);
       else next.add(postId);
       return next;
     });
+  };
+
+  const addComment = (postId: string, text: string) => {
+    if (!user) {
+      toast("Sign in to comment", { description: "Create an account to interact" });
+      navigate("/auth");
+      return;
+    }
+    const newComment: Comment = {
+      id: crypto.randomUUID(),
+      text,
+      created_at: new Date().toISOString(),
+      profiles: { display_name: user.email?.split("@")[0] || "You", avatar_url: null },
+    };
+    setComments((prev) => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }));
+    toast.success("Comment added!");
   };
 
   return (
@@ -153,8 +174,18 @@ const Discover = () => {
               {currentIndex >= 0 ? `${MOCK_PROFILES.length - currentIndex} people nearby` : "Check out the community"}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-sage px-3 py-1.5">
-            <span className="text-xs font-semibold text-sage-foreground">{likesLeft} likes left</span>
+          <div className="flex items-center gap-2">
+            {!user && (
+              <button
+                onClick={() => navigate("/auth")}
+                className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+              >
+                Sign In
+              </button>
+            )}
+            <div className="flex items-center gap-1.5 rounded-full bg-sage px-3 py-1.5">
+              <span className="text-xs font-semibold text-sage-foreground">{likesLeft} likes left</span>
+            </div>
           </div>
         </div>
       </div>
@@ -206,32 +237,21 @@ const Discover = () => {
         <p className="text-xs font-semibold text-muted-foreground px-1 mb-3">Community posts</p>
         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
           {MOCK_POSTS.map((post) => (
-            <div key={post.id} className="shrink-0 w-64 rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)] snap-start">
-              <div className="flex items-center gap-2.5 p-3 pb-2">
-                <img src={post.avatar} alt={post.user} className="h-8 w-8 rounded-full object-cover ring-1 ring-border" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{post.user}</p>
-                  <p className="text-[10px] text-muted-foreground">{post.time}</p>
-                </div>
-              </div>
-              <img src={post.image} alt="" className="w-full aspect-[4/3] object-cover" />
-              <div className="p-3 space-y-2">
-                <p className="text-sm text-foreground leading-relaxed line-clamp-2">{post.text}</p>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => togglePostLike(post.id)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <Heart className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-primary text-primary" : ""}`} />
-                    <span>{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
-                  </button>
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>{post.comments}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <PostCard
+              key={post.id}
+              id={post.id}
+              user={post.user}
+              avatar={post.avatar}
+              image={post.image}
+              text={post.text}
+              likesCount={(likedPosts.has(post.id) ? 1 : 0) + Math.floor(Math.random() * 30 + 10)}
+              commentsCount={(comments[post.id]?.length || 0)}
+              isLiked={likedPosts.has(post.id)}
+              time={post.time}
+              comments={comments[post.id] || []}
+              onToggleLike={() => togglePostLike(post.id)}
+              onAddComment={(text) => addComment(post.id, text)}
+            />
           ))}
         </div>
       </div>
