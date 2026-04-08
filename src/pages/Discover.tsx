@@ -206,7 +206,7 @@ const Discover = () => {
         <p className="text-xs font-semibold text-muted-foreground px-1 mb-3">Community posts</p>
         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
           {MOCK_POSTS.map((post) => (
-            <div key={post.id} className="shrink-0 w-64 rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)]">
+            <div key={post.id} className="shrink-0 w-64 rounded-2xl bg-card overflow-hidden shadow-[var(--shadow-card)] snap-start">
               <div className="flex items-center gap-2.5 p-3 pb-2">
                 <img src={post.avatar} alt={post.user} className="h-8 w-8 rounded-full object-cover ring-1 ring-border" />
                 <div className="flex-1">
